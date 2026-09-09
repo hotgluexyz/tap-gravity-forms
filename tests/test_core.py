@@ -10,7 +10,7 @@ from tap_gravity_forms.streams import (
     build_field_name_map,
     to_snake_case,
 )
-from tap_gravity_forms.tap import TapGravityForms
+from tap_gravity_forms.tap import TapGravityForms, parse_form_ids
 
 SAMPLE_CONFIG = {
     "start_date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),
@@ -39,6 +39,22 @@ def test_to_snake_case():
     assert to_snake_case("Advanced Contact Form") == "advanced_contact_form"
     assert to_snake_case("Preferred Method of Contact") == "preferred_method_of_contact"
     assert to_snake_case("Your Name - First") == "your_name_first"
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        (["15", "16"], ["15", "16"]),
+        ([15, 16], ["15", "16"]),
+        ("15,16", ["15", "16"]),
+        ("15, 16, 17", ["15", "16", "17"]),
+        ("15", ["15"]),
+        ("", []),
+        ([], []),
+    ],
+)
+def test_parse_form_ids(raw, expected):
+    assert parse_form_ids(raw) == expected
 
 
 def test_build_entries_schema_from_form_fields():

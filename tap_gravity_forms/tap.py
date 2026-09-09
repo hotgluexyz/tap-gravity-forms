@@ -17,6 +17,40 @@ from tap_gravity_forms.streams import (
     unique_snake_name,
 )
 
+_FORM_IDS_SCHEMA = th.CustomType(
+    {
+        "oneOf": [
+            {"type": "string"},
+            {
+                "type": "array",
+                "items": {"type": ["string", "integer"]},
+            },
+        ]
+    }
+)
+
+
+def parse_form_ids(value: Any) -> list[str]:
+    """Normalize ``form_ids`` from an array or comma-separated string."""
+    if value is None:
+        return []
+    if isinstance(value, str):
+        parts = value.split(",")
+    elif isinstance(value, (list, tuple)):
+        parts = value
+    else:
+        raise ValueError(
+            "form_ids must be an array or a comma-separated string "
+            f"(got {type(value).__name__})"
+        )
+
+    form_ids: list[str] = []
+    for part in parts:
+        form_id = str(part).strip()
+        if form_id:
+            form_ids.append(form_id)
+    return form_ids
+
 
 class TapGravityForms(Tap):
     """Singer tap for Gravity Forms entries, with one stream per configured form."""
@@ -44,9 +78,13 @@ class TapGravityForms(Tap):
         ),
         th.Property(
             "form_ids",
-            th.ArrayType(th.StringType),
+            _FORM_IDS_SCHEMA,
             required=True,
-            description="List of Gravity Forms form IDs to discover and sync",
+            description=(
+                "Gravity Forms form IDs to discover and sync. "
+                "Accepts a JSON array (e.g. [\"15\", \"16\"]) or a comma-separated "
+                "string (e.g. \"15,16\")."
+            ),
         ),
         th.Property(
             "start_date",
@@ -96,8 +134,7 @@ class TapGravityForms(Tap):
         used_names: set[str] = set()
         page_size = int(self.config.get("page_size") or 100)
 
-        for form_id in self.config["form_ids"]:
-            form_id_str = str(form_id)
+        for form_id_str in parse_form_ids(self.config["form_ids"]):
             form = self._fetch_form(form_id_str)
             name = self._stream_name(form, form_id_str, used_names)
             used_names.add(name)

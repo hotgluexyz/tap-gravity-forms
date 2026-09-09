@@ -33,9 +33,8 @@ plugins:
       sensitive: true
 
     - name: form_ids
-      kind: array
       label: Form IDs
-      description: Gravity Forms form IDs to discover and sync
+      description: Gravity Forms form IDs (JSON array or comma-separated string)
 
     - name: start_date
       kind: date_iso8601

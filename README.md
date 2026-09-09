@@ -60,7 +60,7 @@ tap-gravity-forms --help
 | `base_url` | string | yes | — | WordPress site URL (e.g. `https://example.com`). |
 | `consumer_key` | string | yes | — | Gravity Forms REST API consumer key (sensitive). |
 | `consumer_secret` | string | yes | — | Gravity Forms REST API consumer secret (sensitive). |
-| `form_ids` | array of string | yes | — | Form IDs whose entries should be discovered and synced. |
+| `form_ids` | array of string **or** comma-separated string | yes | — | Form IDs whose entries should be discovered and synced. |
 | `start_date` | string (datetime) | no | `2000-01-01T00:00:00Z` | Earliest entry date to sync. |
 | `page_size` | integer | no | `100` | Entries per API page. |
 
@@ -78,6 +78,8 @@ Run `tap-gravity-forms --about` (or `tap-gravity-forms --about --format=markdown
   "page_size": 100
 }
 ```
+
+`form_ids` also accepts a comma-separated string, e.g. `"15,16"`.
 
 Do not commit real credentials. Prefer environment variables or a secrets manager in production.
 
