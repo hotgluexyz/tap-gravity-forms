@@ -1,0 +1,60 @@
+send_anonymous_usage_stats: true
+project_id: "tap-gravity-forms"
+default_environment: test
+requires_meltano: ">=4.0"
+environments:
+- name: test
+plugins:
+  extractors:
+  - name: "tap-gravity-forms"
+    namespace: "tap_gravity_forms"
+    pip_url: -e .
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    - structured-logging
+
+    settings:
+    - name: base_url
+      label: Base URL
+      description: WordPress site URL hosting Gravity Forms
+
+    - name: consumer_key
+      label: Consumer Key
+      description: Gravity Forms REST API consumer key
+      sensitive: true
+
+    - name: consumer_secret
+      label: Consumer Secret
+      description: Gravity Forms REST API consumer secret
+      sensitive: true
+
+    - name: form_ids
+      kind: array
+      label: Form IDs
+      description: Gravity Forms form IDs to discover and sync
+
+    - name: start_date
+      kind: date_iso8601
+      label: Start Date
+      description: Initial date to start extracting data from
+
+    - name: page_size
+      kind: integer
+      label: Page Size
+      description: Number of entries to request per page
+
+    settings_group_validation:
+    - [base_url, consumer_key, consumer_secret, form_ids]
+
+    config:
+      start_date: 6 months ago
+      page_size: 100
+
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
