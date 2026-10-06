@@ -114,7 +114,10 @@ class TapGravityForms(Tap):
         url = f"{self._api_root()}/forms/{form_id}"
         response = requests.get(
             url,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": self.config.get("user_agent", "Gravity Forms Tap"),
+            },
             auth=self._auth(),
             timeout=60,
         )
