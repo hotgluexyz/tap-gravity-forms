@@ -39,7 +39,10 @@ class GravityFormsStream(RESTStream):
     @property
     def http_headers(self) -> dict:
         """Return HTTP headers for Gravity Forms API requests."""
-        return {"Content-Type": "application/json"}
+        return {
+            "Content-Type": "application/json",
+            "User-Agent": self.config.get("user_agent", "Tap-GravityForms/1.0"),
+        }
 
     @override
     def get_next_page_token(
