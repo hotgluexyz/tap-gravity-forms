@@ -118,6 +118,7 @@ def build_entries_schema(
 
     # Preserve form field order while naming from the map.
     seen: set[str] = set()
+    checkbox_field_names: set[str] = set()
     for field in form.get("fields") or []:
         if not isinstance(field, dict) or field.get("id") is None:
             continue
@@ -132,24 +133,26 @@ def build_entries_schema(
                 if not isinstance(inp, dict) or inp.get("id") is None:
                     continue
                 input_id = str(inp["id"])
-                prop_name = field_name_map.get(input_id)
-                if not prop_name or prop_name in seen:
+                field_name = field_name_map.get(input_id)
+                if not field_name or field_name in seen:
                     continue
-                seen.add(prop_name)
+                seen.add(field_name)
                 input_label = str(inp.get("customLabel") or inp.get("label") or "")
                 description = (
                     f"{field_label} - {input_label}" if input_label else field_label
                 ) or input_id
                 properties.append(
-                    th.Property(prop_name, th.StringType, description=description)
+                    th.Property(field_name, th.StringType, description=description)
                 )
+                if field_type == "checkbox":
+                    checkbox_field_names.add(field_name)
             continue
 
         field_id = str(field["id"])
-        prop_name = field_name_map.get(field_id)
-        if not prop_name or prop_name in seen:
+        field_name = field_name_map.get(field_id)
+        if not field_name or field_name in seen:
             continue
-        seen.add(prop_name)
+        seen.add(field_name)
 
         if display_only or field_type in _DISPLAY_ONLY_TYPES:
             description = field_label or f"{field_type} field {field_id}"
@@ -157,11 +160,15 @@ def build_entries_schema(
             description = field_label or field_id
 
         properties.append(
-            th.Property(prop_name, th.StringType, description=description)
+            th.Property(field_name, th.StringType, description=description)
         )
 
     schema = th.PropertiesList(*properties).to_dict()
     schema["additionalProperties"] = True
+    # Donorperfect business logic - they want checkbox fields mapped to DP Flags
+    # so we need to distinguish them from other fields by adding a field_meta property
+    for field_name in checkbox_field_names:
+        schema["properties"][field_name]["field_meta"] = {"type": "checkbox"}
     return schema
 
 

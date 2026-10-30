@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import requests
 from hotglue_singer_sdk import Stream, Tap
@@ -126,6 +126,21 @@ class TapGravityForms(Tap):
         """Snake-case the form title for the stream name; disambiguate duplicates."""
         title = (form.get("title") or "").strip() or f"form_{form_id}"
         return unique_snake_name(title, used_names, form_id)
+
+    @override
+    @property
+    def catalog_dict(self) -> dict:
+        """Return catalog with ``field_meta`` reattached (SchemaPlus drops non-STANDARD_KEYS)."""
+        catalog = cast(dict, self._singer_catalog.to_dict())
+        for stream in catalog["streams"]:
+            stream_class = self.streams[stream["tap_stream_id"]]
+            raw_properties = (stream_class.schema or {}).get("properties") or {}
+            catalog_properties = stream["schema"]["properties"]
+            for field_name, field_schema in raw_properties.items():
+                field_meta = field_schema.get("field_meta")
+                if field_meta is not None and field_name in catalog_properties:
+                    catalog_properties[field_name]["field_meta"] = field_meta
+        return catalog
 
     @override
     def discover_streams(self) -> list[Stream]:
