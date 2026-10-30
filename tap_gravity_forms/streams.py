@@ -29,7 +29,9 @@ _ENTRY_META_PROPERTIES = [
     th.Property("payment_method", th.StringType, description="Payment method"),
     th.Property("transaction_id", th.StringType, description="Payment transaction ID"),
     th.Property("is_fulfilled", th.StringType, description="Whether payment is fulfilled"),
-    th.Property("created_by", th.StringType, description="WordPress user ID that created the entry"),
+    th.Property(
+        "created_by", th.StringType, description="WordPress user ID that created the entry"
+    ),
     th.Property("transaction_type", th.StringType, description="Payment transaction type"),
     th.Property("status", th.StringType, description="Entry status (active, spam, trash)"),
     th.Property("source_id", th.StringType, description="Source ID"),
@@ -141,9 +143,7 @@ def build_entries_schema(
                 description = (
                     f"{field_label} - {input_label}" if input_label else field_label
                 ) or input_id
-                properties.append(
-                    th.Property(field_name, th.StringType, description=description)
-                )
+                properties.append(th.Property(field_name, th.StringType, description=description))
                 if field_type == "checkbox":
                     checkbox_field_names.add(field_name)
             continue
@@ -159,9 +159,7 @@ def build_entries_schema(
         else:
             description = field_label or field_id
 
-        properties.append(
-            th.Property(field_name, th.StringType, description=description)
-        )
+        properties.append(th.Property(field_name, th.StringType, description=description))
 
     schema = th.PropertiesList(*properties).to_dict()
     schema["additionalProperties"] = True

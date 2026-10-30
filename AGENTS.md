@@ -101,6 +101,7 @@ from typing import Any
 import requests
 from typing_extensions import override
 
+
 class MyStream(GravityFormsStream):
     @override
     def get_next_page_token(

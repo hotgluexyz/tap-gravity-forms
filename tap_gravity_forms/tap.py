@@ -40,8 +40,7 @@ def parse_form_ids(value: Any) -> list[str]:
         parts = value
     else:
         raise TypeError(
-            "form_ids must be an array or a comma-separated string "
-            f"(got {type(value).__name__})"
+            f"form_ids must be an array or a comma-separated string (got {type(value).__name__})"
         )
 
     form_ids: list[str] = []
@@ -82,8 +81,8 @@ class TapGravityForms(Tap):
             required=True,
             description=(
                 "Gravity Forms form IDs to discover and sync. "
-                "Accepts a JSON array (e.g. [\"15\", \"16\"]) or a comma-separated "
-                "string (e.g. \"15,16\")."
+                'Accepts a JSON array (e.g. ["15", "16"]) or a comma-separated '
+                'string (e.g. "15,16").'
             ),
         ),
         th.Property(
