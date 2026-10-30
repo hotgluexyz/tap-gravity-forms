@@ -39,7 +39,7 @@ def parse_form_ids(value: Any) -> list[str]:
     elif isinstance(value, (list, tuple)):
         parts = value
     else:
-        raise ValueError(
+        raise TypeError(
             "form_ids must be an array or a comma-separated string "
             f"(got {type(value).__name__})"
         )

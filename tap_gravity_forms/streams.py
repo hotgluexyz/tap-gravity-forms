@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, ClassVar
 
 from hotglue_singer_sdk import typing as th
 from typing_extensions import override
@@ -175,7 +175,7 @@ def build_entries_schema(
 class FormEntriesStream(GravityFormsStream):
     """Entries (responses) for a single Gravity Forms form."""
 
-    primary_keys = ["id"]
+    primary_keys: ClassVar[list[str]] = ["id"]
     replication_key = "date_updated"
 
     def __init__(
