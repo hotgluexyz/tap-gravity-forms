@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, ClassVar
 
 from hotglue_singer_sdk import typing as th
 from typing_extensions import override
@@ -29,7 +29,9 @@ _ENTRY_META_PROPERTIES = [
     th.Property("payment_method", th.StringType, description="Payment method"),
     th.Property("transaction_id", th.StringType, description="Payment transaction ID"),
     th.Property("is_fulfilled", th.StringType, description="Whether payment is fulfilled"),
-    th.Property("created_by", th.StringType, description="WordPress user ID that created the entry"),
+    th.Property(
+        "created_by", th.StringType, description="WordPress user ID that created the entry"
+    ),
     th.Property("transaction_type", th.StringType, description="Payment transaction type"),
     th.Property("status", th.StringType, description="Entry status (active, spam, trash)"),
     th.Property("source_id", th.StringType, description="Source ID"),
@@ -118,6 +120,7 @@ def build_entries_schema(
 
     # Preserve form field order while naming from the map.
     seen: set[str] = set()
+    checkbox_field_names: set[str] = set()
     for field in form.get("fields") or []:
         if not isinstance(field, dict) or field.get("id") is None:
             continue
@@ -132,43 +135,45 @@ def build_entries_schema(
                 if not isinstance(inp, dict) or inp.get("id") is None:
                     continue
                 input_id = str(inp["id"])
-                prop_name = field_name_map.get(input_id)
-                if not prop_name or prop_name in seen:
+                field_name = field_name_map.get(input_id)
+                if not field_name or field_name in seen:
                     continue
-                seen.add(prop_name)
+                seen.add(field_name)
                 input_label = str(inp.get("customLabel") or inp.get("label") or "")
                 description = (
                     f"{field_label} - {input_label}" if input_label else field_label
                 ) or input_id
-                properties.append(
-                    th.Property(prop_name, th.StringType, description=description)
-                )
+                properties.append(th.Property(field_name, th.StringType, description=description))
+                if field_type == "checkbox":
+                    checkbox_field_names.add(field_name)
             continue
 
         field_id = str(field["id"])
-        prop_name = field_name_map.get(field_id)
-        if not prop_name or prop_name in seen:
+        field_name = field_name_map.get(field_id)
+        if not field_name or field_name in seen:
             continue
-        seen.add(prop_name)
+        seen.add(field_name)
 
         if display_only or field_type in _DISPLAY_ONLY_TYPES:
             description = field_label or f"{field_type} field {field_id}"
         else:
             description = field_label or field_id
 
-        properties.append(
-            th.Property(prop_name, th.StringType, description=description)
-        )
+        properties.append(th.Property(field_name, th.StringType, description=description))
 
     schema = th.PropertiesList(*properties).to_dict()
     schema["additionalProperties"] = True
+    # Donorperfect business logic - they want checkbox fields mapped to DP Flags
+    # so we need to distinguish them from other fields by adding a field_meta property
+    for field_name in checkbox_field_names:
+        schema["properties"][field_name]["field_meta"] = {"type": "checkbox"}
     return schema
 
 
 class FormEntriesStream(GravityFormsStream):
     """Entries (responses) for a single Gravity Forms form."""
 
-    primary_keys = ["id"]
+    primary_keys: ClassVar[list[str]] = ["id"]
     replication_key = "date_updated"
 
     def __init__(

@@ -84,6 +84,15 @@ def test_build_entries_schema_from_form_fields():
                 "label": "Preferred Method of Contact",
                 "inputs": "",
             },
+            {
+                "id": 20,
+                "type": "checkbox",
+                "label": "Interests",
+                "inputs": [
+                    {"id": "20.1", "label": "Pet Lover"},
+                    {"id": "20.2", "label": "Gardening"},
+                ],
+            },
         ],
     }
 
@@ -92,15 +101,23 @@ def test_build_entries_schema_from_form_fields():
     assert field_name_map["1.6"] == "last"
     assert field_name_map["11"] == "preferred_method_of_contact"
     assert field_name_map["7"] == "about_you"
+    assert field_name_map["20.1"] == "pet_lover"
+    assert field_name_map["20.2"] == "gardening"
 
     schema = build_entries_schema(form, field_name_map)
-    props = schema["properties"]
+    schema_properties = schema["properties"]
 
-    assert "id" in props
-    assert "date_updated" in props
-    assert "first" in props
-    assert "last" in props
-    assert "preferred_method_of_contact" in props
-    assert "about_you" in props
-    assert "1.3" not in props
+    assert "id" in schema_properties
+    assert "date_updated" in schema_properties
+    assert "first" in schema_properties
+    assert "last" in schema_properties
+    assert "preferred_method_of_contact" in schema_properties
+    assert "about_you" in schema_properties
+    assert "1.3" not in schema_properties
     assert schema.get("additionalProperties") is True
+
+    assert schema_properties["pet_lover"]["field_meta"] == {"type": "checkbox"}
+    assert schema_properties["gardening"]["field_meta"] == {"type": "checkbox"}
+    assert "field_meta" not in schema_properties["first"]
+    assert "field_meta" not in schema_properties["last"]
+    assert "field_meta" not in schema_properties["preferred_method_of_contact"]
